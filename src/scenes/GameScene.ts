@@ -404,7 +404,8 @@ export class GameScene extends Phaser.Scene {
           // Compare levels to determine who takes damage
           if (playerLevel > monsterLevel) {
             // Player is higher level - monster takes damage
-            const damage = 10 * playerLevel;
+            const levelDiff = playerLevel - monsterLevel;
+            const damage = 10 * levelDiff;
             monster.takeDamage(damage);
             
             // Show damage number on monster
@@ -413,27 +414,28 @@ export class GameScene extends Phaser.Scene {
             // Visual feedback - push monster away
             this.pushAway(monster.sprite, playerPos, 100);
             
-            // Show "STRONGER!" text on player
-            this.showCombatText(playerPos.x, playerPos.y - 30, 'STRONGER!', '#00ff00');
+            // Show level advantage text
+            this.showCombatText(playerPos.x, playerPos.y - 30, `+${levelDiff} LV!`, '#00ff00');
             
           } else if (monsterLevel > playerLevel) {
             // Monster is higher level - player takes damage
-            const damage = 10 * monsterLevel;
+            const levelDiff = monsterLevel - playerLevel;
+            const damage = 10 * levelDiff;
             const isDead = this.player.takeDamage(damage);
             
             // Show damage number on player
             this.showDamageNumber(playerPos.x, playerPos.y, damage, '#ff0000');
             
-            // Show level warning on monster
-            this.showCombatText(monster.x, monster.y - 30, `LV${monsterLevel}!`, '#ff0000');
+            // Show level disadvantage warning
+            this.showCombatText(monster.x, monster.y - 30, `+${levelDiff} LV!`, '#ff0000');
             
             if (isDead) {
               this.handleGameOver();
             }
             
           } else {
-            // Same level - both take damage
-            const damage = 10 * playerLevel;
+            // Same level - both take damage (base damage of 10)
+            const damage = 10;
             
             // Player takes damage
             const isDead = this.player.takeDamage(damage);
@@ -482,10 +484,26 @@ export class GameScene extends Phaser.Scene {
     // Pause physics
     this.physics.pause();
     
+    // Get screen dimensions
+    const screenWidth = this.scale.width;
+    const screenHeight = this.scale.height;
+    
+    // Create dark overlay
+    const overlay = this.add.rectangle(
+      screenWidth / 2,
+      screenHeight / 2,
+      screenWidth,
+      screenHeight,
+      0x000000,
+      0.7
+    );
+    overlay.setScrollFactor(0);
+    overlay.setDepth(1000);
+    
     // Show game over text
     const gameOverText = this.add.text(
-      this.cameras.main.centerX,
-      this.cameras.main.centerY - 50,
+      screenWidth / 2,
+      screenHeight / 2 - 50,
       'GAME OVER',
       {
         fontSize: '48px',
@@ -497,11 +515,12 @@ export class GameScene extends Phaser.Scene {
     );
     gameOverText.setOrigin(0.5);
     gameOverText.setScrollFactor(0);
+    gameOverText.setDepth(1001);
     
     // Show restart button
     const restartText = this.add.text(
-      this.cameras.main.centerX,
-      this.cameras.main.centerY + 20,
+      screenWidth / 2,
+      screenHeight / 2 + 20,
       'Click to Restart',
       {
         fontSize: '24px',
@@ -513,11 +532,42 @@ export class GameScene extends Phaser.Scene {
     );
     restartText.setOrigin(0.5);
     restartText.setScrollFactor(0);
-    restartText.setInteractive();
+    restartText.setDepth(1001);
+    restartText.setInteractive({ useHandCursor: true });
+    
+    // Add hover effect
+    restartText.on('pointerover', () => {
+      restartText.setColor('#ffff00');
+      restartText.setScale(1.1);
+    });
+    
+    restartText.on('pointerout', () => {
+      restartText.setColor('#ffffff');
+      restartText.setScale(1);
+    });
     
     restartText.on('pointerdown', () => {
-      // Clean up event listeners
+      // Clean up all event listeners
       this.events.off('chunk-generated');
+      this.game.events.off('spawn-teddy');
+      this.game.events.off('monster-killed');
+      
+      // Stop and restart both scenes
+      this.scene.stop('UIScene');
+      this.scene.stop('GameScene');
+      
+      // Start fresh game scenes
+      this.scene.start('GameScene');
+      this.scene.start('UIScene');
+    });
+    
+    // Also allow clicking anywhere on the overlay to restart
+    overlay.setInteractive({ useHandCursor: true });
+    overlay.on('pointerdown', () => {
+      // Clean up all event listeners
+      this.events.off('chunk-generated');
+      this.game.events.off('spawn-teddy');
+      this.game.events.off('monster-killed');
       
       // Stop and restart both scenes
       this.scene.stop('UIScene');
