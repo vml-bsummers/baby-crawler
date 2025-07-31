@@ -111,7 +111,7 @@ export class FriendlyTeddy {
     
     monsters.forEach(monster => {
       // Extra safety checks
-      if (monster && monster.sprite && monster.sprite.active && !monster.sprite.pendingDestroy) {
+      if (monster && monster.sprite && monster.sprite.active) {
         const dx = monster.x - this.x;
         const dy = monster.y - this.y;
         const distance = Math.sqrt(dx * dx + dy * dy);

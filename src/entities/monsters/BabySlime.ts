@@ -1,8 +1,7 @@
 import { Monster } from '../Monster';
-import { COLORS, GAME_CONFIG } from '../../utils/Constants';
+import { COLORS } from '../../utils/Constants';
 
 export class BabySlime extends Monster {
-  private bouncePhase: number = 0;
   private slimeSprite!: Phaser.GameObjects.Sprite;
   private currentDirection: 'left' | 'right' = 'right';
   

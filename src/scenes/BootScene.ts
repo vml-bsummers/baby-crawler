@@ -4,7 +4,6 @@ import { ItemRegistry } from '../utils/ItemRegistry';
 
 export class BootScene extends Phaser.Scene {
   private startButton!: Phaser.GameObjects.Text;
-  private isLoading: boolean = true;
 
   constructor() {
     super({ key: 'BootScene' });
@@ -39,7 +38,6 @@ export class BootScene extends Phaser.Scene {
       progressBar.destroy();
       progressBox.destroy();
       loadingText.destroy();
-      this.isLoading = false;
     });
 
     // Load all assets
@@ -197,9 +195,11 @@ export class BootScene extends Phaser.Scene {
         // Step 4: After logo animation, fade in the game
         this.time.delayedCall(1500, () => {
           // Fade in both game scenes
+          const gameScene = this.scene.get('GameScene') as Phaser.Scene;
           if (gameScene && gameScene.cameras && gameScene.cameras.main) {
             gameScene.cameras.main.fadeIn(800, 0, 0, 0);
           }
+          const uiScene = this.scene.get('UIScene') as Phaser.Scene;
           if (uiScene && uiScene.cameras && uiScene.cameras.main) {
             uiScene.cameras.main.fadeIn(800, 0, 0, 0);
           }

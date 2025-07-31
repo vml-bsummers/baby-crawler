@@ -6,7 +6,7 @@ import { DEV_CONFIG } from '../utils/DevConfig';
 export class Player {
   scene: Phaser.Scene;
   sprite: Phaser.GameObjects.Sprite;
-  private cursors: Phaser.Types.Input.Keyboard.CursorKeys;
+  private cursors!: Phaser.Types.Input.Keyboard.CursorKeys;
   private wasd: any;
   private currentDirection: 'up' | 'down' | 'left' | 'right' = 'down';
   private speed: number = 150; // pixels per second
@@ -22,7 +22,7 @@ export class Player {
   
   // Inventory
   private inventory: Map<string, number> = new Map();
-  private inventoryKey: Phaser.Input.Keyboard.Key;
+  private inventoryKey!: Phaser.Input.Keyboard.Key;
 
   constructor(scene: Phaser.Scene, x: number, y: number) {
     this.scene = scene;
@@ -248,10 +248,6 @@ export class Player {
       return true;
     }
     return false;
-  }
-  
-  getInventory(): Map<string, number> {
-    return new Map(this.inventory);
   }
   
   isInventoryKeyJustPressed(): boolean {

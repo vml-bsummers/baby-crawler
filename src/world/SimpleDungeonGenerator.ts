@@ -162,7 +162,6 @@ export class SimpleDungeonGenerator {
     }
     
     // Connect to edges
-    const center = Math.floor(this.width / 2);
     
     // North edge
     const northCenter = Math.floor(northRoom.x + northRoom.width / 2);

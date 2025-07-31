@@ -226,7 +226,6 @@ export class GameScene extends Phaser.Scene {
   }
 
   private handleWallCollisions() {
-    const playerSprite = this.player.sprite;
     const playerPos = this.player.getPosition();
     
     // Use sprite position and size to check collisions
@@ -382,7 +381,7 @@ export class GameScene extends Phaser.Scene {
     const playerPos = this.player.getPosition();
     const playerRadius = 12; // Half of player's hitbox
     
-    this.monsters.forEach((monster, index) => {
+    this.monsters.forEach((monster) => {
       // Skip if monster is being destroyed
       if (!monster.sprite || !monster.sprite.active) return;
       

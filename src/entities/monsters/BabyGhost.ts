@@ -1,5 +1,5 @@
 import { Monster } from '../Monster';
-import { COLORS, GAME_CONFIG } from '../../utils/Constants';
+import { COLORS } from '../../utils/Constants';
 
 export class BabyGhost extends Monster {
   private floatPhase: number = 0;
