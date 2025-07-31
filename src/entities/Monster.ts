@@ -141,6 +141,15 @@ export abstract class Monster {
   }
   
   die() {
+    // Mark sprite as inactive immediately to prevent further updates
+    if (this.sprite) {
+      this.sprite.active = false;
+      const body = this.sprite.body as Phaser.Physics.Arcade.Body;
+      if (body) {
+        body.enable = false;
+      }
+    }
+    
     // Death animation
     this.scene.tweens.add({
       targets: this.sprite,
@@ -148,7 +157,9 @@ export abstract class Monster {
       alpha: 0,
       duration: 300,
       onComplete: () => {
-        this.sprite.destroy();
+        if (this.sprite) {
+          this.sprite.destroy();
+        }
         if (this.levelText) {
           this.levelText.destroy();
         }

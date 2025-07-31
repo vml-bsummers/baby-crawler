@@ -1,5 +1,7 @@
 import Phaser from 'phaser';
 import { GAME_CONFIG } from '../utils/Constants';
+import { ItemRegistry } from '../utils/ItemRegistry';
+import { DEV_CONFIG } from '../utils/DevConfig';
 
 export class Player {
   scene: Phaser.Scene;
@@ -10,13 +12,17 @@ export class Player {
   private speed: number = 150; // pixels per second
   
   // Combat and stats
-  private health: number = 100;
-  private maxHealth: number = 100;
+  health: number = 100;
+  maxHealth: number = 100;
   private level: number = 1; // months old
   private invulnerable: boolean = false;
   private lastHitTime: number = 0;
   private exploredTiles: Set<string> = new Set();
   private isDead: boolean = false;
+  
+  // Inventory
+  private inventory: Map<string, number> = new Map();
+  private inventoryKey: Phaser.Input.Keyboard.Key;
 
   constructor(scene: Phaser.Scene, x: number, y: number) {
     this.scene = scene;
@@ -40,7 +46,19 @@ export class Player {
     
     this.cursors = scene.input.keyboard.createCursorKeys();
     this.wasd = scene.input.keyboard.addKeys('W,S,A,D');
+    this.inventoryKey = scene.input.keyboard.addKey('I');
     
+    // Initialize starting inventory from dev config
+    Object.entries(DEV_CONFIG.START_INVENTORY).forEach(([itemId, quantity]) => {
+      if (quantity > 0 && ItemRegistry.itemExists(itemId)) {
+        this.inventory.set(itemId, quantity);
+      }
+    });
+    
+    // Emit initial inventory update if we have starting items
+    if (this.inventory.size > 0) {
+      scene.game.events.emit('inventory-update', this.inventory);
+    }
   }
 
   update(delta: number) {
@@ -188,5 +206,55 @@ export class Player {
   
   getExploredArea(): number {
     return this.exploredTiles.size;
+  }
+  
+  getInventory(): Map<string, number> {
+    return this.inventory;
+  }
+  
+  collectItem(itemType: string) {
+    const currentCount = this.inventory.get(itemType) || 0;
+    this.inventory.set(itemType, currentCount + 1);
+    
+    // Emit event for UI update
+    this.scene.game.events.emit('inventory-update', this.inventory);
+  }
+  
+  useItem(itemType: string): boolean {
+    const count = this.inventory.get(itemType) || 0;
+    if (count > 0) {
+      this.inventory.set(itemType, count - 1);
+      
+      // Handle item effects using ItemRegistry
+      const itemDef = ItemRegistry.getItem(itemType);
+      if (itemDef && itemDef.effect) {
+        itemDef.effect(this);
+      }
+      
+      // Emit event for UI update
+      this.scene.game.events.emit('inventory-update', this.inventory);
+      return true;
+    }
+    return false;
+  }
+  
+  dropItem(itemType: string): boolean {
+    const count = this.inventory.get(itemType) || 0;
+    if (count > 0) {
+      this.inventory.set(itemType, count - 1);
+      
+      // Emit event for UI update
+      this.scene.game.events.emit('inventory-update', this.inventory);
+      return true;
+    }
+    return false;
+  }
+  
+  getInventory(): Map<string, number> {
+    return new Map(this.inventory);
+  }
+  
+  isInventoryKeyJustPressed(): boolean {
+    return Phaser.Input.Keyboard.JustDown(this.inventoryKey);
   }
 }

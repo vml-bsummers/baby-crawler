@@ -4,6 +4,10 @@ import { ChunkManager } from '../world/ChunkManager';
 import { Player } from '../entities/Player';
 import { Monster } from '../entities/Monster';
 import { BabySlime, BabyGhost } from '../entities/monsters';
+import { Bottle } from '../entities/Bottle';
+import { Teddy } from '../entities/Teddy';
+import { FriendlyTeddy } from '../entities/FriendlyTeddy';
+import { DEV_CONFIG } from '../utils/DevConfig';
 
 export class GameScene extends Phaser.Scene {
   private chunkManager!: ChunkManager;
@@ -11,6 +15,11 @@ export class GameScene extends Phaser.Scene {
   private graphics!: Phaser.GameObjects.Graphics;
   private monsters: Monster[] = [];
   private monsterGroup!: Phaser.Physics.Arcade.Group;
+  private bottles: Bottle[] = [];
+  private bottleGroup!: Phaser.Physics.Arcade.Group;
+  private teddyItems: Teddy[] = [];
+  private teddyItemGroup!: Phaser.Physics.Arcade.Group;
+  private teddies: FriendlyTeddy[] = [];
 
   constructor() {
     super({ key: 'GameScene' });
@@ -51,6 +60,12 @@ export class GameScene extends Phaser.Scene {
     // Create monster group for physics
     this.monsterGroup = this.physics.add.group();
     
+    // Create bottle group for physics
+    this.bottleGroup = this.physics.add.group();
+    
+    // Create teddy item group for physics
+    this.teddyItemGroup = this.physics.add.group();
+    
     // Set up camera to follow player
     this.cameras.main.startFollow(this.player.sprite);
     this.cameras.main.setZoom(2);
@@ -58,6 +73,12 @@ export class GameScene extends Phaser.Scene {
     
     // Spawn initial monsters
     this.spawnMonsters();
+    
+    // Spawn initial bottles
+    this.spawnBottles();
+    
+    // Spawn initial teddy items
+    this.spawnTeddyItems();
     
     // Set up keyboard controls
     this.setupControls();
@@ -67,13 +88,25 @@ export class GameScene extends Phaser.Scene {
     this.game.events.emit('age-update', 1);
     this.game.events.emit('area-update', 0);
     
+    // Emit initial inventory if player has starting items
+    const playerInventory = this.player.getInventory();
+    this.game.events.emit('inventory-update', playerInventory);
+    
     // Listen for chunk generation events
     this.events.on('chunk-generated', this.onChunkGenerated, this);
+    
+    // Listen for teddy spawn events
+    this.game.events.on('spawn-teddy', this.spawnTeddy, this);
   }
 
   update(_time: number, delta: number) {
     // Update player
     this.player.update(delta);
+    
+    // Check for inventory toggle
+    if (this.player.isInventoryKeyJustPressed()) {
+      this.game.events.emit('toggle-inventory');
+    }
     
     // Get player position from sprite
     const playerPos = this.player.getPosition();
@@ -83,14 +116,50 @@ export class GameScene extends Phaser.Scene {
     const playerChunkY = Math.floor(playerPos.y / (GAME_CONFIG.chunkSize * GAME_CONFIG.tileSize));
     this.chunkManager.updateChunks(playerChunkX, playerChunkY);
     
-    // Update monsters
-    this.monsters.forEach(monster => {
-      monster.update(delta, playerPos.x, playerPos.y);
+    // Update monsters and remove dead ones
+    this.monsters = this.monsters.filter(monster => {
+      if (monster.sprite && monster.sprite.active) {
+        monster.update(delta, playerPos.x, playerPos.y);
+        return true;
+      }
+      return false;
+    });
+    
+    // Update bottles
+    this.bottles.forEach(bottle => {
+      bottle.update();
+    });
+    
+    // Update teddy items
+    this.teddyItems.forEach(teddy => {
+      teddy.update();
+    });
+    
+    // Update teddies
+    this.teddies = this.teddies.filter(teddy => {
+      if (teddy.sprite && teddy.sprite.active) {
+        teddy.update(delta, this.monsters);
+        return true;
+      }
+      return false;
     });
     
     // Spawn more monsters if needed
-    if (this.monsters.length < 10 && Math.random() < 0.01) {
+    if (this.monsters.length < DEV_CONFIG.SPAWN_RATES.MAX_MONSTERS && 
+        Math.random() < DEV_CONFIG.SPAWN_RATES.MONSTER_SPAWN_CHANCE) {
       this.spawnMonsters();
+    }
+    
+    // Spawn more bottles if needed
+    if (this.bottles.length < DEV_CONFIG.SPAWN_RATES.MAX_BOTTLES && 
+        Math.random() < DEV_CONFIG.SPAWN_RATES.BOTTLE_SPAWN_CHANCE) {
+      this.spawnBottles();
+    }
+    
+    // Spawn more teddy items if needed
+    if (this.teddyItems.length < DEV_CONFIG.SPAWN_RATES.MAX_TEDDIES && 
+        Math.random() < DEV_CONFIG.SPAWN_RATES.TEDDY_SPAWN_CHANCE) {
+      this.spawnTeddyItems();
     }
     
     // Render visible chunks
@@ -102,6 +171,12 @@ export class GameScene extends Phaser.Scene {
     
     // Handle monster-player collisions
     this.handleMonsterPlayerCollisions();
+    
+    // Handle bottle-player collisions
+    this.handleBottlePlayerCollisions();
+    
+    // Handle teddy item-player collisions
+    this.handleTeddyItemPlayerCollisions();
   }
 
   private setupControls() {
@@ -376,8 +451,16 @@ export class GameScene extends Phaser.Scene {
     restartText.setInteractive();
     
     restartText.on('pointerdown', () => {
-      this.scene.restart();
-      this.scene.restart('UIScene');
+      // Clean up event listeners
+      this.events.off('chunk-generated');
+      
+      // Stop and restart both scenes
+      this.scene.stop('UIScene');
+      this.scene.stop('GameScene');
+      
+      // Start fresh game scenes
+      this.scene.start('GameScene');
+      this.scene.start('UIScene');
     });
   }
   
@@ -387,8 +470,9 @@ export class GameScene extends Phaser.Scene {
       return;
     }
     
-    // Spawn 1-3 monsters per new chunk
-    const monstersToSpawn = Math.floor(Math.random() * 3) + 1;
+    // Spawn monsters per new chunk based on config
+    const monsterRange = DEV_CONFIG.SPAWN_RATES.MONSTERS_PER_CHUNK.max - DEV_CONFIG.SPAWN_RATES.MONSTERS_PER_CHUNK.min + 1;
+    const monstersToSpawn = Math.floor(Math.random() * monsterRange) + DEV_CONFIG.SPAWN_RATES.MONSTERS_PER_CHUNK.min;
     
     for (let i = 0; i < monstersToSpawn; i++) {
       // Random position within the chunk
@@ -412,5 +496,201 @@ export class GameScene extends Phaser.Scene {
         this.monsterGroup.add(monster.sprite);
       }
     }
+    
+    // Also spawn bottles per new chunk based on config
+    const bottleRange = DEV_CONFIG.SPAWN_RATES.BOTTLES_PER_CHUNK.max - DEV_CONFIG.SPAWN_RATES.BOTTLES_PER_CHUNK.min + 1;
+    const bottlesToSpawn = Math.floor(Math.random() * bottleRange) + DEV_CONFIG.SPAWN_RATES.BOTTLES_PER_CHUNK.min;
+    
+    for (let i = 0; i < bottlesToSpawn; i++) {
+      // Random position within the chunk
+      const tileX = chunkX * GAME_CONFIG.chunkSize + Math.floor(Math.random() * GAME_CONFIG.chunkSize);
+      const tileY = chunkY * GAME_CONFIG.chunkSize + Math.floor(Math.random() * GAME_CONFIG.chunkSize);
+      const x = tileX * GAME_CONFIG.tileSize;
+      const y = tileY * GAME_CONFIG.tileSize;
+      
+      // Check if position is valid (on floor)
+      const tile = this.chunkManager.getTileAt(tileX, tileY);
+      
+      if (tile === TILE_TYPES.FLOOR || tile === TILE_TYPES.CORRIDOR) {
+        const bottle = new Bottle(this, x, y);
+        this.bottles.push(bottle);
+        this.bottleGroup.add(bottle.sprite);
+      }
+    }
+    
+    // Also spawn teddy items per new chunk based on config
+    const teddyRange = DEV_CONFIG.SPAWN_RATES.TEDDIES_PER_CHUNK.max - DEV_CONFIG.SPAWN_RATES.TEDDIES_PER_CHUNK.min + 1;
+    const teddiesToSpawn = Math.floor(Math.random() * teddyRange) + DEV_CONFIG.SPAWN_RATES.TEDDIES_PER_CHUNK.min;
+    
+    for (let i = 0; i < teddiesToSpawn; i++) {
+      // Random position within the chunk
+      const tileX = chunkX * GAME_CONFIG.chunkSize + Math.floor(Math.random() * GAME_CONFIG.chunkSize);
+      const tileY = chunkY * GAME_CONFIG.chunkSize + Math.floor(Math.random() * GAME_CONFIG.chunkSize);
+      const x = tileX * GAME_CONFIG.tileSize;
+      const y = tileY * GAME_CONFIG.tileSize;
+      
+      // Check if position is valid (on floor)
+      const tile = this.chunkManager.getTileAt(tileX, tileY);
+      
+      if (tile === TILE_TYPES.FLOOR || tile === TILE_TYPES.CORRIDOR) {
+        const teddy = new Teddy(this, x, y);
+        this.teddyItems.push(teddy);
+        this.teddyItemGroup.add(teddy.sprite);
+      }
+    }
+  }
+  
+  private spawnBottles() {
+    // Find valid spawn positions near the player
+    const playerPos = this.player.getPosition();
+    const spawnDistance = GAME_CONFIG.tileSize * 15;
+    const attempts = 10;
+    
+    for (let i = 0; i < attempts; i++) {
+      const angle = Math.random() * Math.PI * 2;
+      const distance = spawnDistance + Math.random() * spawnDistance;
+      const x = playerPos.x + Math.cos(angle) * distance;
+      const y = playerPos.y + Math.sin(angle) * distance;
+      
+      // Check if position is valid (on floor)
+      const tileX = Math.floor(x / GAME_CONFIG.tileSize);
+      const tileY = Math.floor(y / GAME_CONFIG.tileSize);
+      const tile = this.chunkManager.getTileAt(tileX, tileY);
+      
+      if (tile === TILE_TYPES.FLOOR || tile === TILE_TYPES.CORRIDOR) {
+        const bottle = new Bottle(this, x, y);
+        this.bottles.push(bottle);
+        this.bottleGroup.add(bottle.sprite);
+        
+        // Only spawn one bottle per call
+        break;
+      }
+    }
+  }
+  
+  private handleBottlePlayerCollisions() {
+    const playerPos = this.player.getPosition();
+    const playerRadius = 16;
+    
+    this.bottles.forEach((bottle, index) => {
+      if (bottle.collected) return;
+      
+      const dx = bottle.x - playerPos.x;
+      const dy = bottle.y - playerPos.y;
+      const distance = Math.sqrt(dx * dx + dy * dy);
+      
+      if (distance < playerRadius + 16) {
+        // Collect the bottle
+        bottle.collect();
+        this.player.collectItem('bottle');
+        
+        // Remove from array after collection animation
+        this.time.delayedCall(300, () => {
+          this.bottles.splice(index, 1);
+        });
+      }
+    });
+  }
+  
+  private spawnTeddy(playerPosition: { x: number, y: number }) {
+    // Spawn teddy near the player
+    const offsetDistance = 50;
+    const angle = Math.random() * Math.PI * 2;
+    const x = playerPosition.x + Math.cos(angle) * offsetDistance;
+    const y = playerPosition.y + Math.sin(angle) * offsetDistance;
+    
+    // Create the teddy
+    const teddy = new FriendlyTeddy(this, x, y);
+    this.teddies.push(teddy);
+    
+    // Show a message
+    this.showFloatingText(playerPosition.x, playerPosition.y - 30, 'Teddy summoned!', '#ff69b4');
+  }
+  
+  private showFloatingText(x: number, y: number, text: string, color: string) {
+    const floatingText = this.add.text(x, y, text, {
+      fontSize: '20px',
+      color: color,
+      fontFamily: 'Arial',
+      stroke: '#000000',
+      strokeThickness: 3
+    });
+    floatingText.setOrigin(0.5);
+    
+    // Animate the text floating up and fading out
+    this.tweens.add({
+      targets: floatingText,
+      y: y - 50,
+      alpha: 0,
+      duration: 1500,
+      ease: 'Power2',
+      onComplete: () => {
+        floatingText.destroy();
+      }
+    });
+  }
+  
+  private spawnTeddyItems() {
+    // Find valid spawn positions near the player
+    const playerPos = this.player.getPosition();
+    const spawnDistance = GAME_CONFIG.tileSize * 20;
+    const attempts = 10;
+    
+    for (let i = 0; i < attempts; i++) {
+      const angle = Math.random() * Math.PI * 2;
+      const distance = spawnDistance + Math.random() * spawnDistance;
+      const x = playerPos.x + Math.cos(angle) * distance;
+      const y = playerPos.y + Math.sin(angle) * distance;
+      
+      // Check if position is valid (on floor)
+      const tileX = Math.floor(x / GAME_CONFIG.tileSize);
+      const tileY = Math.floor(y / GAME_CONFIG.tileSize);
+      const tile = this.chunkManager.getTileAt(tileX, tileY);
+      
+      if (tile === TILE_TYPES.FLOOR || tile === TILE_TYPES.CORRIDOR) {
+        const teddy = new Teddy(this, x, y);
+        this.teddyItems.push(teddy);
+        this.teddyItemGroup.add(teddy.sprite);
+        
+        // Only spawn one teddy per call
+        break;
+      }
+    }
+  }
+  
+  private handleTeddyItemPlayerCollisions() {
+    const playerPos = this.player.getPosition();
+    const playerRadius = 16;
+    
+    this.teddyItems.forEach((teddy, index) => {
+      if (teddy.collected) return;
+      
+      const dx = teddy.x - playerPos.x;
+      const dy = teddy.y - playerPos.y;
+      const distance = Math.sqrt(dx * dx + dy * dy);
+      
+      if (distance < playerRadius + 16) {
+        // Collect the teddy
+        teddy.collect();
+        this.player.collectItem('teddy');
+        
+        // Remove from array after collection animation
+        this.time.delayedCall(300, () => {
+          this.teddyItems.splice(index, 1);
+        });
+      }
+    });
+  }
+  
+  shutdown() {
+    // Clean up event listeners
+    this.events.off('chunk-generated');
+    this.game.events.off('spawn-teddy');
+    
+    // Clear arrays
+    this.monsters = [];
+    this.bottles = [];
+    this.teddyItems = [];
+    this.teddies = [];
   }
 }

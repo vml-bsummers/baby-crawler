@@ -84,6 +84,15 @@ export class BabySlime extends Monster {
   }
   
   die() {
+    // Mark sprite as inactive immediately
+    if (this.sprite) {
+      this.sprite.active = false;
+      const body = this.sprite.body as Phaser.Physics.Arcade.Body;
+      if (body) {
+        body.enable = false;
+      }
+    }
+    
     // Override to handle sprite-specific death
     this.scene.tweens.add({
       targets: this.slimeSprite,
@@ -91,7 +100,9 @@ export class BabySlime extends Monster {
       alpha: 0,
       duration: 300,
       onComplete: () => {
-        this.slimeSprite.destroy();
+        if (this.slimeSprite) {
+          this.slimeSprite.destroy();
+        }
         if (this.levelText) {
           this.levelText.destroy();
         }

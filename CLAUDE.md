@@ -60,6 +60,7 @@ Baby Crawler is a procedurally generated dungeon crawler where players control a
   - Health: 100 HP with invulnerability frames after hit
   - Level: 1 (displayed as "months old")
   - Tracks area explored for progression
+  - Inventory system with Map<string, number> storage
 - **Monster.ts**: Base class for all monsters with behaviors (wander, follow, flee, idle)
   - Level scales based on player's explored area (1% conversion)
   - Hit chance based on level ratio vs player
@@ -67,13 +68,24 @@ Baby Crawler is a procedurally generated dungeon crawler where players control a
 - **Monster Types** (`/src/entities/monsters/`):
   - BabyGhost: Custom sprite, flees from player, translucent with floating animation
   - BabySlime: Custom sprite, bounces around with jiggle effect, wanders
+- **Collectible Items**:
+  - Bottle: Restores 20 HP when used
+  - Teddy: Spawns a FriendlyTeddy that hunts monsters
+- **FriendlyTeddy.ts**: Allied entity that seeks and destroys monsters for 15 seconds
 
 #### 3. **Scene System** (`/src/scenes/`)
 - **BootScene.ts**: Handles game initialization, start screen, asset loading, sprite animations
-- **GameScene.ts**: Main gameplay, handles rendering, collision detection, monster spawning, combat
-- **UIScene.ts**: Game UI overlay showing health bar, player age, and area explored
+- **GameScene.ts**: Main gameplay, handles rendering, collision detection, monster spawning, combat, item collection
+- **UIScene.ts**: Game UI overlay showing health bar, player age, area explored, and inventory drawer
 
-#### 4. **World Generation**
+#### 4. **Inventory System** (`/src/utils/`)
+- **ItemRegistry.ts**: Centralized item definitions and effects
+- Inventory drawer UI with grid-based item display
+- Items show images with quantity badges
+- Click to use, right-click to drop
+- Toggle with 'I' key or click on drawer
+
+#### 5. **World Generation**
 - Origin chunk (0,0) has a large 28x28 spawn room with no monsters
 - Each chunk connects to adjacent chunks via corridors at edges
 - Rooms are connected within chunks and to chunk edges for infinite exploration
@@ -100,10 +112,20 @@ Baby Crawler is a procedurally generated dungeon crawler where players control a
 #### Development Configuration (`/src/utils/DevConfig.ts`)
 ```typescript
 export const DEV_CONFIG = {
-  SKIP_START: true,        // Skip start screen during development
+  SKIP_START: false,       // Skip start screen during development
   DEBUG_PHYSICS: false,    // Show physics debug overlay
   SHOW_FPS: false,        // Show FPS counter
   START_POSITION: null,   // Override spawn position
+  START_INVENTORY: {       // Starting inventory items for testing
+    'bottle': 3,
+    'teddy': 2
+  },
+  SPAWN_RATES: {          // Configurable spawn rates for testing
+    MONSTER_SPAWN_CHANCE: 0.05,
+    BOTTLE_SPAWN_CHANCE: 0.03,
+    TEDDY_SPAWN_CHANCE: 0.02,
+    // ... and more
+  }
 };
 ```
 
@@ -126,11 +148,15 @@ export const DEV_CONFIG = {
 baby-crawler/
 ├── .ddev/                    # DDEV configuration
 ├── public/
-│   └── images/              # Game assets (sprites, logos)
+│   └── images/              # Game assets organized by type
+│       ├── ui/              # UI elements (loader, logo, diaper)
+│       ├── sprites/         # Character sprite sheets (*_sheet.png)
+│       ├── items/           # Collectible item images
+│       └── unused/          # Unused/old assets
 ├── src/
 │   ├── entities/            # Player and monster classes
 │   ├── scenes/              # Phaser scenes
-│   ├── utils/               # Constants and configuration
+│   ├── utils/               # Constants, configuration, and registries
 │   ├── world/               # Chunk and dungeon generation
 │   └── main.ts              # Entry point
 ├── index.html               # Main HTML file
@@ -160,6 +186,14 @@ baby-crawler/
 17. Disabled player movement on game over
 18. Added monster spawning when new chunks are generated (1-3 per chunk)
 19. Removed debug console from UI
+20. Implemented inventory system with collectible items (bottles, teddy bears)
+21. Added inventory drawer UI with item grid display
+22. Created ItemRegistry for centralized item management
+23. Added FriendlyTeddy entity that hunts monsters for 15 seconds
+24. Standardized sprite sheet naming to *_sheet.png format
+25. Reorganized images into subdirectories (ui/, sprites/, items/, unused/)
+26. Added configurable starting inventory and spawn rates in DevConfig
+27. Fixed monster array cleanup and teddy attack behavior
 
 ## Deployment
 The project is configured for Netlify deployment:
@@ -169,6 +203,9 @@ The project is configured for Netlify deployment:
 
 ## Testing
 Currently no automated tests. Manual testing is done through the development server.
+
+## Testing Notes
+- When testing in Playwright, know that the page reloads from the dev server after every code edit
 
 ## Performance Considerations
 - Chunk system limits world rendering to visible area

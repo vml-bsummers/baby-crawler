@@ -1,5 +1,6 @@
 import Phaser from 'phaser';
 import { DEV_CONFIG } from '../utils/DevConfig';
+import { ItemRegistry } from '../utils/ItemRegistry';
 
 export class BootScene extends Phaser.Scene {
   private startButton!: Phaser.GameObjects.Text;
@@ -42,23 +43,33 @@ export class BootScene extends Phaser.Scene {
     });
 
     // Load all assets
-    this.load.image('loader', '/images/baby_crawler_loader.png');
-    this.load.image('logo', '/images/baby_crawler_logo.png');
-    this.load.spritesheet('baby', '/images/baby_sprite.png', {
+    this.load.image('loader', '/images/ui/baby_crawler_loader.png');
+    this.load.image('logo', '/images/ui/baby_crawler_logo.png');
+    this.load.spritesheet('baby', '/images/sprites/baby_sheet.png', {
       frameWidth: 64,
       frameHeight: 64
     });
-    this.load.spritesheet('ghost', '/images/ghost_sprite.png', {
+    this.load.spritesheet('ghost', '/images/sprites/ghost_sheet.png', {
       frameWidth: 64,
       frameHeight: 64
     });
-    this.load.spritesheet('slime', '/images/slime_sheet.png', {
+    this.load.spritesheet('slime', '/images/sprites/slime_sheet.png', {
+      frameWidth: 64,
+      frameHeight: 64
+    });
+    this.load.image('bottle', '/images/items/bottle.png');
+    this.load.image('diaper', '/images/ui/diaper.png');
+    this.load.image('teddy', '/images/items/teddy.png');
+    this.load.spritesheet('teddy', '/images/sprites/teddy_sheet.png', {
       frameWidth: 64,
       frameHeight: 64
     });
   }
 
   create() {
+    // Initialize the item registry
+    ItemRegistry.initialize();
+    
     // Create animations for the baby
     this.createAnimations();
     
@@ -146,23 +157,53 @@ export class BootScene extends Phaser.Scene {
   }
 
   private startGame() {
-    // Fade out before starting game
-    this.cameras.main.fadeOut(500, 0, 0, 0);
+    // Step 1: Fade loading image to black
+    this.cameras.main.fadeOut(800, 0, 0, 0);
     
-    this.time.delayedCall(500, () => {
-      // Start the game scene
+    // Step 2: After fade out, start game scenes but keep them hidden
+    this.time.delayedCall(800, () => {
+      // Start the game scene but keep it hidden initially
       this.scene.start('GameScene');
       this.scene.start('UIScene');
       
-      // Fade in the logo
+      // Wait a frame for scenes to initialize, then fade them out
+      this.time.delayedCall(50, () => {
+        const gameScene = this.scene.get('GameScene') as Phaser.Scene;
+        if (gameScene && gameScene.cameras && gameScene.cameras.main) {
+          gameScene.cameras.main.fadeOut(0, 0, 0, 0);
+        }
+        
+        const uiScene = this.scene.get('UIScene') as Phaser.Scene;
+        if (uiScene && uiScene.cameras && uiScene.cameras.main) {
+          uiScene.cameras.main.fadeOut(0, 0, 0, 0);
+        }
+      });
+      
+      // Step 3: Animate logo rising and fading in
       const logoElement = document.getElementById('game-logo');
       if (logoElement) {
-        // Add ready class first to enable transition
+        // Set initial position below the game area
+        logoElement.style.transform = 'translateY(100px)';
+        logoElement.style.transition = 'none';
         logoElement.classList.add('ready');
-        // Use setTimeout to ensure the transition is applied
+        
+        // Start the rise and fade in animation
         setTimeout(() => {
+          logoElement.style.transition = 'opacity 1.2s ease-in-out, transform 1.2s ease-out';
+          logoElement.style.transform = 'translateY(0)';
           logoElement.classList.add('visible');
-        }, 50);
+        }, 100);
+        
+        // Step 4: After logo animation, fade in the game
+        this.time.delayedCall(1500, () => {
+          // Fade in both game scenes
+          if (gameScene && gameScene.cameras && gameScene.cameras.main) {
+            gameScene.cameras.main.fadeIn(800, 0, 0, 0);
+          }
+          if (uiScene && uiScene.cameras && uiScene.cameras.main) {
+            uiScene.cameras.main.fadeIn(800, 0, 0, 0);
+          }
+        });
       }
     });
   }
@@ -212,6 +253,9 @@ export class BootScene extends Phaser.Scene {
     
     // Slime animations
     this.createSlimeAnimations();
+    
+    // Teddy animations
+    this.createTeddyAnimations();
   }
   
   private createGhostAnimations() {
@@ -260,6 +304,48 @@ export class BootScene extends Phaser.Scene {
     this.anims.create({
       key: 'slime-idle',
       frames: [{ key: 'slime', frame: 0 }],
+      frameRate: 1
+    });
+  }
+  
+  private createTeddyAnimations() {
+    // Teddy has 8 frames total (4 directions x 2 frames each)
+    // Row 1: Down (frames 0-1)
+    this.anims.create({
+      key: 'teddy-down',
+      frames: this.anims.generateFrameNumbers('teddy', { start: 0, end: 1 }),
+      frameRate: 8,
+      repeat: -1
+    });
+    
+    // Row 2: Up (frames 2-3)
+    this.anims.create({
+      key: 'teddy-up',
+      frames: this.anims.generateFrameNumbers('teddy', { start: 2, end: 3 }),
+      frameRate: 8,
+      repeat: -1
+    });
+    
+    // Row 3: Right (frames 4-5)
+    this.anims.create({
+      key: 'teddy-right',
+      frames: this.anims.generateFrameNumbers('teddy', { start: 4, end: 5 }),
+      frameRate: 8,
+      repeat: -1
+    });
+    
+    // Row 4: Left (frames 6-7)
+    this.anims.create({
+      key: 'teddy-left',
+      frames: this.anims.generateFrameNumbers('teddy', { start: 6, end: 7 }),
+      frameRate: 8,
+      repeat: -1
+    });
+    
+    // Idle animation (use first frame of down)
+    this.anims.create({
+      key: 'teddy-idle',
+      frames: [{ key: 'teddy', frame: 0 }],
       frameRate: 1
     });
   }
