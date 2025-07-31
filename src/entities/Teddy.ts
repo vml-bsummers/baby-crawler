@@ -13,7 +13,7 @@ export class Teddy {
     this.y = y;
     
     // Create teddy sprite
-    this.sprite = scene.add.sprite(x, y, 'teddy');
+    this.sprite = scene.add.sprite(x, y, 'teddy-item');
     this.sprite.setScale(0.75); // 48x48 size
     
     // Add physics
