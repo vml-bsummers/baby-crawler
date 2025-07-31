@@ -28,7 +28,7 @@ export class ItemRegistry {
     this.registerItem({
       id: 'teddy',
       name: 'Teddy Bear',
-      imageKey: 'teddy',
+      imageKey: 'teddy-item',
       description: 'Summons a brave teddy to fight monsters',
       maxStack: 3,
       effect: (player) => {

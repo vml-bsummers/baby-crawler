@@ -57,7 +57,7 @@ export class BootScene extends Phaser.Scene {
     });
     this.load.image('bottle', '/images/items/bottle.png');
     this.load.image('diaper', '/images/ui/diaper.png');
-    this.load.image('teddy', '/images/items/teddy.png');
+    this.load.image('teddy-item', '/images/items/teddy.png');
     this.load.spritesheet('teddy', '/images/sprites/teddy_sheet.png', {
       frameWidth: 64,
       frameHeight: 64
