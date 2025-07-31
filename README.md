@@ -1,104 +1,104 @@
-# Baby Crawler
+# Baby Crawler 🍼
 
-A procedurally generated dungeon crawler where you play as a baby exploring an infinite nursery-themed dungeon! Built with Phaser 3 and TypeScript.
+A procedurally generated dungeon crawler where you play as a baby exploring an infinite nursery-themed dungeon!
 
-## Features
+![Baby Crawler Game](public/images/ui/baby_crawler_logo.png)
 
-- 🍼 **Infinite Procedural Generation**: The dungeon generates endlessly as you explore
-- 👶 **Baby-Themed**: Play as a crawling baby in a nursery-themed dungeon
-- 🎮 **Smooth Controls**: Use WASD or Arrow keys to crawl around
-- 🏗️ **Chunk-Based System**: Efficient memory management with dynamic chunk loading
-- 🎨 **Cute Visuals**: Soft pastel colors and baby-friendly design
+## 🎮 Play the Game
 
-## Development
+- **Live Demo**: [Coming soon - Deploy to Netlify]
+- **Netlify**: `https://your-site-name.netlify.app`
 
-This project uses DDEV for the development environment.
+## 🎯 Game Features
 
-### Prerequisites
-- DDEV installed on your machine
+- **Infinite Procedural Generation**: Explore endless dungeons that generate as you crawl
+- **Nursery Theme**: Fight baby ghosts and slimes in a cute, baby-themed world
+- **Inventory System**: Collect bottles for health and teddy bears to summon allies
+- **Progressive Difficulty**: Monsters get stronger as you explore more area
+- **Smooth Controls**: WASD or arrow keys for movement, 'I' for inventory
 
-### Getting Started
-
-1. Start the DDEV environment:
-   ```bash
-   ddev start
-   ```
-
-2. Install dependencies:
-   ```bash
-   ddev exec npm install
-   ```
-
-3. Run the development server:
-   ```bash
-   ddev exec npm run dev -- --host
-   ```
-
-4. Access the game at: https://baby-crawler.ddev.site:5174
-
-### Building for Production
-
-```bash
-ddev exec npm run build
-```
-
-The built files will be in the `dist` directory, ready for deployment to Netlify.
-
-## Game Controls
-
-- **Arrow Keys** or **WASD**: Move the baby
-- The baby will crawl around with a cute wobbling animation
-- Explore the infinite dungeon!
-
-## Technical Stack
+## 🛠️ Technology Stack
 
 - **Game Engine**: Phaser 3
 - **Language**: TypeScript
 - **Build Tool**: Vite
-- **Development Environment**: DDEV
+- **Development**: DDEV (Docker-based)
 - **Deployment**: Netlify
 
-## Current Features
+## 🚀 Getting Started
 
-- ✅ Infinite procedural dungeon generation
-- ✅ Baby player with smooth crawling animations
-- ✅ 4 types of baby monsters:
-  - Baby Dragon (hiccups flames)
-  - Baby Slime (bouncing jello)
-  - Baby Ghost (translucent, says "boo-boo")
-  - Baby Spider (fuzzy and fast)
-- ✅ Smart collision detection
-- ✅ Chunk-based world system for performance
+### Prerequisites
+- Node.js (v18 or higher)
+- npm or yarn
+- DDEV (optional, for Docker development)
 
-## Deployment to Netlify
+### Installation
 
-### Option 1: Drag & Drop
-1. Build the project: `ddev exec npm run build`
-2. The `dist` folder contains your built game
-3. Drag the `dist` folder to Netlify's deployment area
-
-### Option 2: Git Integration
-1. Push this repository to GitHub
-2. Connect your GitHub repo to Netlify
-3. Netlify will automatically build and deploy using the `netlify.toml` configuration
-
-### Option 3: Netlify CLI
+1. Clone the repository:
 ```bash
-# Install Netlify CLI globally
-npm install -g netlify-cli
-
-# Build the project
-ddev exec npm run build
-
-# Deploy to Netlify
-netlify deploy --prod --dir=dist
+git clone https://github.com/YOUR_USERNAME/baby-crawler.git
+cd baby-crawler
 ```
 
-## Upcoming Features
+2. Install dependencies:
+```bash
+npm install
+```
 
-- 🧸 More baby monsters (Skeleton, Goblin, Mimic, Bat)
-- 🎯 Toy collection system
-- 🗺️ Minimap implementation
-- 🎵 Sound effects and music
-- ✨ Particle effects
-- 🎨 Nursery-themed tile graphics
+3. Run the development server:
+```bash
+npm run dev
+```
+
+4. Open your browser to `http://localhost:5173`
+
+### Using DDEV (Recommended)
+
+```bash
+ddev start
+ddev exec npm install
+ddev exec npm run dev -- --host
+```
+
+Then access at `https://baby-crawler.ddev.site:5174`
+
+## 🎮 How to Play
+
+- **Move**: Use WASD or Arrow keys
+- **Inventory**: Press 'I' or click the drawer at the bottom
+- **Use Items**: Click items in your inventory
+- **Drop Items**: Right-click items in your inventory
+- **Survive**: Avoid monsters or fight back with teddy bears!
+
+## 📁 Project Structure
+
+```
+baby-crawler/
+├── public/images/       # Game assets
+│   ├── ui/             # UI elements
+│   ├── sprites/        # Character sprites
+│   └── items/          # Item images
+├── src/
+│   ├── entities/       # Game entities (Player, Monsters, Items)
+│   ├── scenes/         # Phaser scenes
+│   ├── utils/          # Utilities and configuration
+│   └── world/          # World generation system
+└── ...configuration files
+```
+
+## 🤝 Contributing
+
+Contributions are welcome! Please feel free to submit a Pull Request.
+
+## 📝 License
+
+This project is open source and available under the [MIT License](LICENSE).
+
+## 🎨 Assets
+
+- Custom pixel art sprites created for this game
+- UI elements designed with a nursery theme
+
+---
+
+Made with ❤️ and lots of baby giggles
