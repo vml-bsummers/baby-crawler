@@ -184,7 +184,7 @@ export class UIScene extends Phaser.Scene {
     this.inventoryText.setOrigin(0.5);
     
     // Add controls text
-    const controls = this.add.text(0, 360, 'Click item to use | Press I to toggle', {
+    const controls = this.add.text(0, 360, 'Click item to use', {
       fontSize: '14px',
       color: '#aaaaaa',
       fontFamily: 'Arial'
