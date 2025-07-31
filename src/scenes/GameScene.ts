@@ -476,6 +476,21 @@ export class GameScene extends Phaser.Scene {
       const body = sprite.body as Phaser.Physics.Arcade.Body;
       if (body) {
         body.setVelocity(pushX, pushY);
+        
+        // For player sprite, add a timer to reset velocity
+        if (sprite === this.player.sprite) {
+          // Clear any existing velocity reset timer
+          if ((sprite as any).velocityResetTimer) {
+            this.time.removeEvent((sprite as any).velocityResetTimer);
+          }
+          
+          // Set new timer to reset velocity after 200ms
+          (sprite as any).velocityResetTimer = this.time.delayedCall(200, () => {
+            if (body && body.enable) {
+              body.setVelocity(0, 0);
+            }
+          });
+        }
       }
     }
   }

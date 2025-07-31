@@ -110,6 +110,7 @@ export class Player {
     }
 
     // Apply movement
+    const body = this.sprite.body as Phaser.Physics.Arcade.Body;
     if (moveX !== 0 || moveY !== 0) {
       const moveAmount = this.speed * delta / 1000;
       this.sprite.x += moveX * moveAmount;
@@ -117,6 +118,9 @@ export class Player {
       
       // Track explored tiles
       this.trackExploration();
+    } else if (body) {
+      // Reset velocity when not moving to prevent sliding
+      body.setVelocity(0, 0);
     }
 
     // Update animations
