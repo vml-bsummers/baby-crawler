@@ -385,7 +385,7 @@ export class GameScene extends Phaser.Scene {
     const playerPos = this.player.getPosition();
     const playerRadius = 12; // Half of player's hitbox
     
-    this.monsters.forEach((monster) => {
+    this.monsters.forEach((monster, index) => {
       // Skip if monster is being destroyed
       if (!monster.sprite || !monster.sprite.active) return;
       
@@ -396,24 +396,86 @@ export class GameScene extends Phaser.Scene {
       
       // Check collision
       if (distance < playerRadius + monsterRadius) {
-        // Calculate hit chance based on monster level vs player level
-        const baseHitChance = 0.5; // 50% base chance
-        const levelRatio = monster.getLevel() / this.player.getLevel();
-        const hitChance = Math.min(0.9, baseHitChance * levelRatio); // Cap at 90%
+        const playerLevel = this.player.getLevel();
+        const monsterLevel = monster.getLevel();
         
-        // Check if monster hits (once per second)
-        if (!this.player.isInvulnerable() && Math.random() < hitChance) {
-          const damage = 10 * monster.getLevel(); // 10 damage per monster level
-          const isDead = this.player.takeDamage(damage);
-          
-          
-          if (isDead) {
-            // Handle game over
-            this.handleGameOver();
+        // Only deal damage once per second (using invulnerability as cooldown)
+        if (!this.player.isInvulnerable()) {
+          // Compare levels to determine who takes damage
+          if (playerLevel > monsterLevel) {
+            // Player is higher level - monster takes damage
+            const damage = 10 * playerLevel;
+            monster.takeDamage(damage);
+            
+            // Show damage number on monster
+            this.showDamageNumber(monster.x, monster.y, damage, '#ff0000');
+            
+            // Visual feedback - push monster away
+            this.pushAway(monster.sprite, playerPos, 100);
+            
+            // Show "STRONGER!" text on player
+            this.showCombatText(playerPos.x, playerPos.y - 30, 'STRONGER!', '#00ff00');
+            
+          } else if (monsterLevel > playerLevel) {
+            // Monster is higher level - player takes damage
+            const damage = 10 * monsterLevel;
+            const isDead = this.player.takeDamage(damage);
+            
+            // Show damage number on player
+            this.showDamageNumber(playerPos.x, playerPos.y, damage, '#ff0000');
+            
+            // Show level warning on monster
+            this.showCombatText(monster.x, monster.y - 30, `LV${monsterLevel}!`, '#ff0000');
+            
+            if (isDead) {
+              this.handleGameOver();
+            }
+            
+          } else {
+            // Same level - both take damage
+            const damage = 10 * playerLevel;
+            
+            // Player takes damage
+            const isDead = this.player.takeDamage(damage);
+            
+            // Show damage on both
+            this.showDamageNumber(playerPos.x, playerPos.y, damage, '#ffff00');
+            this.showDamageNumber(monster.x, monster.y, damage, '#ffff00');
+            
+            // Show "DRAW!" text
+            this.showCombatText((playerPos.x + monster.x) / 2, (playerPos.y + monster.y) / 2 - 40, 'DRAW!', '#ffff00');
+            
+            if (isDead) {
+              this.handleGameOver();
+            }
+            
+            // Monster takes damage too
+            monster.takeDamage(damage);
+            
+            // Push both away from each other
+            this.pushAway(monster.sprite, playerPos, 50);
+            this.pushAway(this.player.sprite, { x: monster.x, y: monster.y }, 50);
           }
         }
       }
     });
+  }
+  
+  private pushAway(sprite: Phaser.GameObjects.Sprite, fromPos: { x: number, y: number }, force: number) {
+    const dx = sprite.x - fromPos.x;
+    const dy = sprite.y - fromPos.y;
+    const distance = Math.sqrt(dx * dx + dy * dy);
+    
+    if (distance > 0) {
+      const pushX = (dx / distance) * force;
+      const pushY = (dy / distance) * force;
+      
+      // Apply push force
+      const body = sprite.body as Phaser.Physics.Arcade.Body;
+      if (body) {
+        body.setVelocity(pushX, pushY);
+      }
+    }
   }
   
   private handleGameOver() {
@@ -706,6 +768,60 @@ export class GameScene extends Phaser.Scene {
       duration: 1500,
       ease: 'Power2',
       onComplete: () => xpText.destroy()
+    });
+  }
+  
+  private showDamageNumber(x: number, y: number, damage: number, color: string) {
+    const damageText = this.add.text(x, y, `-${damage}`, {
+      fontSize: '24px',
+      color: color,
+      fontFamily: 'Arial',
+      fontStyle: 'bold',
+      stroke: '#000000',
+      strokeThickness: 3
+    });
+    damageText.setOrigin(0.5);
+    
+    // Animate floating up and fading
+    this.tweens.add({
+      targets: damageText,
+      y: y - 40,
+      alpha: 0,
+      duration: 1000,
+      ease: 'Power2',
+      onComplete: () => damageText.destroy()
+    });
+  }
+  
+  private showCombatText(x: number, y: number, text: string, color: string) {
+    const combatText = this.add.text(x, y, text, {
+      fontSize: '20px',
+      color: color,
+      fontFamily: 'Arial',
+      fontStyle: 'bold',
+      stroke: '#000000',
+      strokeThickness: 3
+    });
+    combatText.setOrigin(0.5);
+    combatText.setScale(0.5);
+    
+    // Animate with bounce effect
+    this.tweens.add({
+      targets: combatText,
+      scale: 1,
+      duration: 200,
+      ease: 'Back.easeOut',
+      onComplete: () => {
+        this.time.delayedCall(500, () => {
+          this.tweens.add({
+            targets: combatText,
+            alpha: 0,
+            y: y - 20,
+            duration: 500,
+            onComplete: () => combatText.destroy()
+          });
+        });
+      }
     });
   }
   
