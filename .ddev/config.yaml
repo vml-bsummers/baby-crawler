@@ -1,0 +1,27 @@
+name: baby-crawler
+type: php
+docroot: "public"
+nodejs_version: "20"
+
+# Performance optimizations
+performance_mode: "global"
+
+# Expose Vite's default port
+web_extra_exposed_ports:
+  - name: vite
+    container_port: 5173
+    http_port: 5173
+    https_port: 5174
+
+# Custom commands for the project
+hooks:
+  post-start:
+    - exec: npm --version
+    - exec: node --version
+
+# Additional hostnames if needed
+additional_hostnames: []
+
+# PHP not needed for this project
+php_version: "8.2"
+webserver_type: nginx-fpm
