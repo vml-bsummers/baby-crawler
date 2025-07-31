@@ -185,8 +185,10 @@ export class BootScene extends Phaser.Scene {
         }
       });
       
-      // Step 3: Animate logo rising and fading in
+      // Step 3: Animate logo and keyboard shortcuts rising and fading in
       const logoElement = document.getElementById('game-logo');
+      const keyboardElement = document.getElementById('keyboard-shortcuts');
+      
       if (logoElement) {
         // Set initial position below the game area
         logoElement.style.transform = 'translateY(100px)';
@@ -199,20 +201,34 @@ export class BootScene extends Phaser.Scene {
           logoElement.style.transform = 'translateY(0)';
           logoElement.classList.add('visible');
         }, 100);
-        
-        // Step 4: After logo animation, fade in the game
-        this.time.delayedCall(1500, () => {
-          // Fade in both game scenes
-          const gameScene = this.scene.get('GameScene') as Phaser.Scene;
-          if (gameScene && gameScene.cameras && gameScene.cameras.main) {
-            gameScene.cameras.main.fadeIn(800, 0, 0, 0);
-          }
-          const uiScene = this.scene.get('UIScene') as Phaser.Scene;
-          if (uiScene && uiScene.cameras && uiScene.cameras.main) {
-            uiScene.cameras.main.fadeIn(800, 0, 0, 0);
-          }
-        });
       }
+      
+      if (keyboardElement) {
+        // Set initial position above the game area (hidden behind)
+        keyboardElement.style.transform = 'translateY(-150px)';
+        keyboardElement.style.transition = 'none';
+        keyboardElement.classList.add('ready');
+        
+        // Start the downward slide and fade in animation with slight delay after logo
+        setTimeout(() => {
+          keyboardElement.style.transition = 'opacity 1.2s ease-in-out, transform 1.2s ease-out';
+          keyboardElement.style.transform = 'translateY(0)';
+          keyboardElement.classList.add('visible');
+        }, 400);
+      }
+      
+      // Step 4: After logo animation, fade in the game
+      this.time.delayedCall(1500, () => {
+        // Fade in both game scenes
+        const gameScene = this.scene.get('GameScene') as Phaser.Scene;
+        if (gameScene && gameScene.cameras && gameScene.cameras.main) {
+          gameScene.cameras.main.fadeIn(800, 0, 0, 0);
+        }
+        const uiScene = this.scene.get('UIScene') as Phaser.Scene;
+        if (uiScene && uiScene.cameras && uiScene.cameras.main) {
+          uiScene.cameras.main.fadeIn(800, 0, 0, 0);
+        }
+      });
     });
   }
 
