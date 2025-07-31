@@ -87,6 +87,7 @@ export class GameScene extends Phaser.Scene {
     this.game.events.emit('health-update', 100, 100);
     this.game.events.emit('age-update', 1);
     this.game.events.emit('area-update', 0);
+    this.game.events.emit('experience-update', 0, 100, 1);
     
     // Emit initial inventory if player has starting items
     const playerInventory = this.player.getInventory();
@@ -97,6 +98,9 @@ export class GameScene extends Phaser.Scene {
     
     // Listen for teddy spawn events
     this.game.events.on('spawn-teddy', this.spawnTeddy, this);
+    
+    // Listen for monster death events
+    this.game.events.on('monster-killed', this.onMonsterKilled, this);
   }
 
   update(_time: number, delta: number) {
@@ -681,10 +685,35 @@ export class GameScene extends Phaser.Scene {
     });
   }
   
+  private onMonsterKilled(experienceReward: number, x: number, y: number) {
+    // Give experience to player
+    this.player.addExperience(experienceReward);
+    
+    // Show XP gain text
+    const xpText = this.add.text(x, y - 20, `+${experienceReward} XP`, {
+      fontSize: '18px',
+      color: '#00ff00',
+      fontFamily: 'Arial',
+      stroke: '#000000',
+      strokeThickness: 2
+    });
+    xpText.setOrigin(0.5);
+    
+    this.tweens.add({
+      targets: xpText,
+      y: y - 50,
+      alpha: 0,
+      duration: 1500,
+      ease: 'Power2',
+      onComplete: () => xpText.destroy()
+    });
+  }
+  
   shutdown() {
     // Clean up event listeners
     this.events.off('chunk-generated');
     this.game.events.off('spawn-teddy');
+    this.game.events.off('monster-killed');
     
     // Clear arrays
     this.monsters = [];

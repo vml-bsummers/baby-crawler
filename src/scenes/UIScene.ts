@@ -6,12 +6,16 @@ export class UIScene extends Phaser.Scene {
   private healthText!: Phaser.GameObjects.Text;
   private playerAgeText!: Phaser.GameObjects.Text;
   private areaExploredText!: Phaser.GameObjects.Text;
+  private experienceBar!: Phaser.GameObjects.Graphics;
+  private experienceText!: Phaser.GameObjects.Text;
   
   // Game stats
   private playerHealth: number = 100;
   private maxHealth: number = 100;
   private playerAge: number = 1; // months old
   private areaExplored: number = 0; // square meters
+  private playerExperience: number = 0;
+  private experienceToNext: number = 100;
   
   // Inventory UI
   private inventoryDrawer!: Phaser.GameObjects.Container;
@@ -27,6 +31,7 @@ export class UIScene extends Phaser.Scene {
   create() {
     // Create UI elements
     this.createHealthBar();
+    this.createExperienceBar();
     this.createPlayerAge();
     this.createAreaExplored();
     this.createInventoryDrawer();
@@ -55,6 +60,29 @@ export class UIScene extends Phaser.Scene {
       fontSize: '18px',
       color: '#ff6b6b',
       fontFamily: 'Arial, sans-serif'
+    });
+  }
+  
+  private createExperienceBar() {
+    // Background for experience display
+    const bg = this.add.graphics();
+    bg.fillStyle(0xffffff, 0.8);
+    bg.fillRoundedRect(270, 10, 250, 60, 10);
+    
+    // Experience bar container
+    const barBg = this.add.graphics();
+    barBg.fillStyle(0x444444, 1);
+    barBg.fillRect(280, 40, 230, 20);
+    
+    // Experience bar fill
+    this.experienceBar = this.add.graphics();
+    this.updateExperienceBar();
+    
+    // Experience text
+    this.experienceText = this.add.text(280, 15, `Level ${this.playerAge} - XP: ${this.playerExperience}/${this.experienceToNext}`, {
+      fontSize: '16px',
+      color: '#333333',
+      fontFamily: 'Arial'
     });
   }
   
@@ -91,6 +119,13 @@ export class UIScene extends Phaser.Scene {
     this.healthBar.fillStyle(0xff6b6b, 1);
     const healthPercent = this.playerHealth / this.maxHealth;
     this.healthBar.fillRect(20, 40, 200 * healthPercent, 20);
+  }
+  
+  private updateExperienceBar() {
+    this.experienceBar.clear();
+    this.experienceBar.fillStyle(0xffff00, 1);
+    const xpPercent = this.playerExperience / this.experienceToNext;
+    this.experienceBar.fillRect(280, 40, 230 * xpPercent, 20);
   }
   
   updateHealth(health: number, maxHealth: number) {
@@ -299,10 +334,71 @@ export class UIScene extends Phaser.Scene {
     this.game.events.on('toggle-inventory', () => {
       this.toggleInventory();
     });
+    
+    // Listen for experience updates
+    this.game.events.on('experience-update', (experience: number, toNext: number, level: number) => {
+      this.updateExperience(experience, toNext, level);
+    });
+    
+    // Listen for level up
+    this.game.events.on('level-up', (level: number) => {
+      this.showLevelUpNotification(level);
+    });
   }
   
   update() {
     // Check for inventory key press in GameScene instead
+  }
+  
+  private updateExperience(experience: number, toNext: number, level: number) {
+    this.playerExperience = experience;
+    this.experienceToNext = toNext;
+    this.experienceText.setText(`Level ${level} - XP: ${experience}/${toNext}`);
+    this.updateExperienceBar();
+  }
+  
+  private showLevelUpNotification(level: number) {
+    // Create level up notification
+    const notification = this.add.container(this.scale.width / 2, 150);
+    
+    // Background
+    const bg = this.add.graphics();
+    bg.fillStyle(0x000000, 0.8);
+    bg.fillRoundedRect(-150, -30, 300, 60, 15);
+    notification.add(bg);
+    
+    // Text
+    const text = this.add.text(0, 0, `LEVEL UP! Now Level ${level}`, {
+      fontSize: '28px',
+      color: '#ffff00',
+      fontFamily: 'Arial',
+      fontStyle: 'bold',
+      stroke: '#000000',
+      strokeThickness: 4
+    });
+    text.setOrigin(0.5);
+    notification.add(text);
+    
+    // Animation
+    notification.setScale(0);
+    this.tweens.add({
+      targets: notification,
+      scale: 1,
+      duration: 300,
+      ease: 'Back.easeOut',
+      onComplete: () => {
+        this.time.delayedCall(2000, () => {
+          this.tweens.add({
+            targets: notification,
+            scale: 0,
+            alpha: 0,
+            duration: 300,
+            ease: 'Back.easeIn',
+            onComplete: () => notification.destroy()
+          });
+        });
+      }
+    });
   }
 
 }

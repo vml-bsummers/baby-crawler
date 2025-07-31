@@ -15,6 +15,8 @@ export class Player {
   health: number = 100;
   maxHealth: number = 100;
   private level: number = 1; // months old
+  private experience: number = 0;
+  private experienceToNext: number = 100; // XP needed for level 2
   private invulnerable: boolean = false;
   private lastHitTime: number = 0;
   private exploredTiles: Set<string> = new Set();
@@ -252,5 +254,111 @@ export class Player {
   
   isInventoryKeyJustPressed(): boolean {
     return Phaser.Input.Keyboard.JustDown(this.inventoryKey);
+  }
+  
+  // Experience system with logarithmic scaling
+  private calculateExperienceForLevel(level: number): number {
+    // Base XP = 100, each level requires ~1.5x more XP than the previous
+    // Formula: XP = 100 * (level^2.2)
+    return Math.floor(100 * Math.pow(level, 2.2));
+  }
+  
+  addExperience(amount: number) {
+    this.experience += amount;
+    
+    // Check for level up
+    while (this.experience >= this.experienceToNext) {
+      this.experience -= this.experienceToNext;
+      this.levelUp();
+    }
+    
+    // Emit experience update
+    this.scene.game.events.emit('experience-update', this.experience, this.experienceToNext, this.level);
+  }
+  
+  private levelUp() {
+    this.level++;
+    this.experienceToNext = this.calculateExperienceForLevel(this.level);
+    
+    // Increase max health by 10 per level
+    this.maxHealth += 10;
+    this.health = this.maxHealth; // Full heal on level up
+    
+    // Speed bonus: +5 pixels/second per level
+    this.speed += 5;
+    
+    // Emit level up event
+    this.scene.game.events.emit('level-up', this.level);
+    this.scene.game.events.emit('health-update', this.health, this.maxHealth);
+    this.scene.game.events.emit('age-update', this.level);
+    
+    // Show level up effect
+    this.showLevelUpEffect();
+  }
+  
+  private showLevelUpEffect() {
+    // Golden glow effect
+    this.sprite.setTint(0xffff00);
+    
+    // Create sparkle effects around player
+    for (let i = 0; i < 8; i++) {
+      const angle = (Math.PI * 2 * i) / 8;
+      const sparkle = this.scene.add.star(
+        this.sprite.x + Math.cos(angle) * 20,
+        this.sprite.y + Math.sin(angle) * 20,
+        5,
+        3,
+        6,
+        0xffff00
+      );
+      
+      this.scene.tweens.add({
+        targets: sparkle,
+        x: sparkle.x + Math.cos(angle) * 40,
+        y: sparkle.y + Math.sin(angle) * 40,
+        alpha: 0,
+        scale: 0,
+        duration: 1000,
+        ease: 'Power2',
+        onComplete: () => sparkle.destroy()
+      });
+    }
+    
+    // Remove tint after effect
+    this.scene.time.delayedCall(500, () => {
+      this.sprite.clearTint();
+    });
+    
+    // Show level up text
+    const levelUpText = this.scene.add.text(
+      this.sprite.x,
+      this.sprite.y - 40,
+      `Level ${this.level}!`,
+      {
+        fontSize: '24px',
+        color: '#ffff00',
+        fontFamily: 'Arial',
+        stroke: '#000000',
+        strokeThickness: 3
+      }
+    );
+    levelUpText.setOrigin(0.5);
+    
+    this.scene.tweens.add({
+      targets: levelUpText,
+      y: levelUpText.y - 30,
+      alpha: 0,
+      duration: 2000,
+      ease: 'Power2',
+      onComplete: () => levelUpText.destroy()
+    });
+  }
+  
+  getExperience(): number {
+    return this.experience;
+  }
+  
+  getExperienceToNext(): number {
+    return this.experienceToNext;
   }
 }

@@ -137,6 +137,9 @@ export abstract class Monster {
     
     if (this.health <= 0) {
       this.die();
+      // Give experience to player based on monster level
+      const experienceReward = this.level * 50; // 50 XP per monster level
+      this.scene.game.events.emit('monster-killed', experienceReward, this.x, this.y);
     }
   }
   
