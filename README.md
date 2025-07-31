@@ -6,8 +6,8 @@ A procedurally generated dungeon crawler where you play as a baby exploring an i
 
 ## 🎮 Play the Game
 
-- **Live Demo**: [Coming soon - Deploy to Netlify]
-- **Netlify**: `https://your-site-name.netlify.app`
+- **Live Demo**: [https://baby-crawler.netlify.app/](https://baby-crawler.netlify.app/)
+- **Custom Domain**: [https://baby-crawler.benserver.org/](https://baby-crawler.benserver.org/)
 
 ## 🎯 Game Features
 
@@ -36,7 +36,7 @@ A procedurally generated dungeon crawler where you play as a baby exploring an i
 
 1. Clone the repository:
 ```bash
-git clone https://github.com/YOUR_USERNAME/baby-crawler.git
+git clone https://github.com/vml-bsummers/baby-crawler.git
 cd baby-crawler
 ```
 
@@ -66,9 +66,11 @@ Then access at `https://baby-crawler.ddev.site:5174`
 
 - **Move**: Use WASD or Arrow keys
 - **Inventory**: Press 'I' or click the drawer at the bottom
+- **Use Bottle**: Press 'B' for quick healing
 - **Use Items**: Click items in your inventory
 - **Drop Items**: Right-click items in your inventory
-- **Survive**: Avoid monsters or fight back with teddy bears!
+- **Level Up**: Defeat monsters to gain experience and grow stronger
+- **Survive**: Higher level monsters chase you, but you damage lower level ones!
 
 ## 📁 Project Structure
 

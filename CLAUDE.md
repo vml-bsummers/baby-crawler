@@ -2,7 +2,10 @@
 
 ## Project Environment
 - This project runs in a **DDEV environment**
-- Access URL: https://baby-crawler.ddev.site:5174
+- Local Development URL: https://baby-crawler.ddev.site:5174
+- Production URLs:
+  - Primary: https://baby-crawler.netlify.app/
+  - Custom Domain: https://baby-crawler.benserver.org/
 - The game is built with Phaser 3 and TypeScript
 
 ## Quick Start Commands
@@ -214,10 +217,15 @@ baby-crawler/
 37. Scaled up inventory items 2x with improved spacing and count badge positioning
 
 ## Deployment
-The project is configured for Netlify deployment:
+The project is deployed on Netlify and accessible at:
+- **Netlify URL**: https://baby-crawler.netlify.app/
+- **Custom Domain**: https://baby-crawler.benserver.org/
+
+Deployment configuration:
 1. Build command: `npm run build`
 2. Publish directory: `dist`
 3. The `netlify.toml` file contains the deployment configuration
+4. Automatic deployments on push to main branch
 
 ## Testing
 Currently no automated tests. Manual testing is done through the development server.
