@@ -451,7 +451,7 @@ export class GameScene extends Phaser.Scene {
     const playerPos = this.player.getPosition();
     const playerRadius = 12; // Half of player's hitbox
     
-    this.monsters.forEach((monster, index) => {
+    this.monsters.forEach((monster) => {
       // Skip if monster is being destroyed
       if (!monster.sprite || !monster.sprite.active) return;
       
@@ -529,7 +529,7 @@ export class GameScene extends Phaser.Scene {
     });
   }
   
-  private pushAway(sprite: Phaser.GameObjects.Sprite, fromPos: { x: number, y: number }, force: number) {
+  private pushAway(sprite: Phaser.GameObjects.Sprite | Phaser.GameObjects.Arc | Phaser.GameObjects.Rectangle | Phaser.GameObjects.Ellipse, fromPos: { x: number, y: number }, force: number) {
     const dx = sprite.x - fromPos.x;
     const dy = sprite.y - fromPos.y;
     const distance = Math.sqrt(dx * dx + dy * dy);

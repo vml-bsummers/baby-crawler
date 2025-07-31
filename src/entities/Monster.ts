@@ -181,7 +181,11 @@ export abstract class Monster {
     
     // Death effects
     // Flash red
-    this.sprite.setTint(0xff0000);
+    if ('setTint' in this.sprite && typeof this.sprite.setTint === 'function') {
+      this.sprite.setTint(0xff0000);
+    } else if ('setFillStyle' in this.sprite && typeof this.sprite.setFillStyle === 'function') {
+      this.sprite.setFillStyle(0xff0000);
+    }
     
     // Create death particles effect
     const deathX = this.sprite.x;

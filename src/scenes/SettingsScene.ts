@@ -46,7 +46,6 @@ export class SettingsScene extends Phaser.Scene {
     
     // Create scrollable content area
     const contentY = -panelHeight/2 + 60;
-    const inputSpacing = 35;
     let currentY = contentY;
     
     // Monster spawn settings
