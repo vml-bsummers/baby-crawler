@@ -8,7 +8,7 @@ export const GAME_CONFIG = {
 
 export const COLORS = {
   // Soft pastel colors for baby theme
-  wall: 0xffd3e1,      // Pink
+  wall: 0x89CFF0,      // Baby blue
   floor: 0xfff5ba,     // Light yellow
   player: 0xa8e6cf,    // Mint green
   monsters: {
