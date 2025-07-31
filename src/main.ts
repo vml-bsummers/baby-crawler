@@ -3,6 +3,7 @@ import Phaser from 'phaser';
 import { BootScene } from './scenes/BootScene';
 import { GameScene } from './scenes/GameScene';
 import { UIScene } from './scenes/UIScene';
+import { SettingsScene } from './scenes/SettingsScene';
 import { GAME_CONFIG } from './utils/Constants';
 
 const config: Phaser.Types.Core.GameConfig = {
@@ -19,7 +20,7 @@ const config: Phaser.Types.Core.GameConfig = {
       debug: false
     }
   },
-  scene: [BootScene, GameScene, UIScene]
+  scene: [BootScene, GameScene, UIScene, SettingsScene]
 };
 
 const game = new Phaser.Game(config);

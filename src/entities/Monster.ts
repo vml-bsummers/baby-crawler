@@ -49,8 +49,32 @@ export abstract class Monster {
   abstract createSprite(): void;
   abstract makeSound(): void;
   
-  update(delta: number, playerX: number, playerY: number) {
+  update(delta: number, playerX: number, playerY: number, playerLevel?: number) {
     const body = this.sprite.body as Phaser.Physics.Arcade.Body;
+    
+    // Update behavior based on level comparison with player
+    if (playerLevel !== undefined) {
+      const dx = playerX - this.x;
+      const dy = playerY - this.y;
+      const distance = Math.sqrt(dx * dx + dy * dy);
+      
+      // Only change behavior when player is within detection range
+      if (distance < GAME_CONFIG.tileSize * 8) {
+        if (this.level > playerLevel) {
+          // Monster is higher level - chase the player
+          this.behavior = 'follow';
+        } else if (this.level < playerLevel) {
+          // Monster is lower level - flee from player
+          this.behavior = 'flee';
+        } else {
+          // Same level - wander normally
+          this.behavior = 'wander';
+        }
+      } else {
+        // Too far away - just wander
+        this.behavior = 'wander';
+      }
+    }
     
     switch (this.behavior) {
       case 'wander':
@@ -113,10 +137,11 @@ export abstract class Monster {
     const dy = this.y - playerY;
     const distance = Math.sqrt(dx * dx + dy * dy);
     
-    if (distance < GAME_CONFIG.tileSize * 4) {
+    if (distance < GAME_CONFIG.tileSize * 6) {
+      // Flee slowly - use 0.7x speed instead of 1.5x
       body.setVelocity(
-        (dx / distance) * this.speed * 1.5,
-        (dy / distance) * this.speed * 1.5
+        (dx / distance) * this.speed * 0.7,
+        (dy / distance) * this.speed * 0.7
       );
     } else {
       this.behavior = 'wander';

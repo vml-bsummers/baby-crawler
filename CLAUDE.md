@@ -56,15 +56,22 @@ Baby Crawler is a procedurally generated dungeon crawler where players control a
   - Direct position-based movement (not physics-based)
   - 64x64 sprite scaled to 32x32
   - Wobble animation while moving
-  - Speed: 150 pixels/second
+  - Speed: 150 pixels/second (increases +5 per level)
   - Health: 100 HP with invulnerability frames after hit
-  - Level: 1 (displayed as "months old")
+  - Level: Starts at 1 (displayed as "months old")
+  - Experience system with logarithmic scaling (100 * level^2.2)
   - Tracks area explored for progression
   - Inventory system with Map<string, number> storage
+  - Quick-use bottle with 'B' key
+  - Level up restores full health and increases max HP by 10
 - **Monster.ts**: Base class for all monsters with behaviors (wander, follow, flee, idle)
   - Level scales based on player's explored area (1% conversion)
-  - Hit chance based on level ratio vs player
-  - Damage: 10 per monster level
+  - AI behavior based on level comparison:
+    - Higher level than player: Chase (follow)
+    - Lower level than player: Flee slowly (0.7x speed)
+    - Same level: Wander normally
+  - Combat damage: 10 * level difference
+  - Experience reward on death: 50 * monster level
 - **Monster Types** (`/src/entities/monsters/`):
   - BabyGhost: Custom sprite, flees from player, translucent with floating animation
   - BabySlime: Custom sprite, bounces around with jiggle effect, wanders
@@ -76,7 +83,8 @@ Baby Crawler is a procedurally generated dungeon crawler where players control a
 #### 3. **Scene System** (`/src/scenes/`)
 - **BootScene.ts**: Handles game initialization, start screen, asset loading, sprite animations
 - **GameScene.ts**: Main gameplay, handles rendering, collision detection, monster spawning, combat, item collection
-- **UIScene.ts**: Game UI overlay showing health bar, player age, area explored, and inventory drawer
+- **UIScene.ts**: Game UI overlay showing health bar, player age, area explored, experience bar, and inventory drawer
+- **SettingsScene.ts**: Secret dev settings panel (press ~ to toggle) for editing spawn rates and starting inventory
 
 #### 4. **Inventory System** (`/src/utils/`)
 - **ItemRegistry.ts**: Centralized item definitions and effects
@@ -194,6 +202,16 @@ baby-crawler/
 25. Reorganized images into subdirectories (ui/, sprites/, items/, unused/)
 26. Added configurable starting inventory and spawn rates in DevConfig
 27. Fixed monster array cleanup and teddy attack behavior
+28. Implemented experience system with logarithmic level scaling (level^2.2)
+29. Added level-based combat where higher level damages lower level (10 * level difference)
+30. Fixed player sliding issue after monster collision
+31. Added wall collision for friendly teddy bears
+32. Implemented level-based monster AI (chase if higher level, flee if lower)
+33. Created secret settings panel (press ~ to open) with editable dev config values
+34. Fixed game over screen freezing and restart functionality
+35. Added automatic inventory drawer closing after using teddy
+36. Added 'B' key shortcut for quick bottle use with healing visual effects
+37. Scaled up inventory items 2x with improved spacing and count badge positioning
 
 ## Deployment
 The project is configured for Netlify deployment:

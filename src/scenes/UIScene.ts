@@ -227,9 +227,9 @@ export class UIScene extends Phaser.Scene {
       this.inventoryText.setText('Empty');
     } else {
       // Grid layout configuration
-      const itemSize = 48;
-      const padding = 10;
-      const itemsPerRow = 8;
+      const itemSize = 64; // Increased from 48
+      const padding = 20; // Increased from 10
+      const itemsPerRow = 6; // Reduced from 8 to fit
       const startX = -((itemsPerRow * (itemSize + padding)) / 2) + itemSize / 2;
       const startY = 220;
       
@@ -255,18 +255,18 @@ export class UIScene extends Phaser.Scene {
           
           // Item image
           const itemImage = this.add.image(0, 0, itemDef.imageKey);
-          itemImage.setScale(0.75); // Scale to fit nicely in slot
+          itemImage.setScale(1.5); // Scale up 2x from 0.75
           itemContainer.add(itemImage);
           
           // Count badge
           if (count > 1) {
             const countBg = this.add.graphics();
             countBg.fillStyle(0x000000, 0.8);
-            countBg.fillCircle(itemSize/2 - 8, itemSize/2 - 8, 10);
+            countBg.fillCircle(itemSize/2 - 10, itemSize/2 - 10, 12);
             itemContainer.add(countBg);
             
-            const countText = this.add.text(itemSize/2 - 8, itemSize/2 - 8, count.toString(), {
-              fontSize: '12px',
+            const countText = this.add.text(itemSize/2 - 10, itemSize/2 - 10, count.toString(), {
+              fontSize: '14px',
               color: '#ffffff',
               fontFamily: 'Arial'
             });
@@ -343,6 +343,13 @@ export class UIScene extends Phaser.Scene {
     // Listen for level up
     this.game.events.on('level-up', (level: number) => {
       this.showLevelUpNotification(level);
+    });
+    
+    // Listen for close inventory event
+    this.game.events.on('close-inventory', () => {
+      if (this.inventoryOpen) {
+        this.toggleInventory();
+      }
     });
   }
   

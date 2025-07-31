@@ -55,8 +55,8 @@ export class BabyGhost extends Monster {
     });
   }
   
-  update(delta: number, playerX: number, playerY: number) {
-    super.update(delta, playerX, playerY);
+  update(delta: number, playerX: number, playerY: number, playerLevel?: number) {
+    super.update(delta, playerX, playerY, playerLevel);
     
     // Additional floating effect
     this.floatPhase += delta * 0.003;

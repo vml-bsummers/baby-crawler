@@ -25,6 +25,7 @@ export class Player {
   // Inventory
   private inventory: Map<string, number> = new Map();
   private inventoryKey!: Phaser.Input.Keyboard.Key;
+  private bottleKey!: Phaser.Input.Keyboard.Key;
 
   constructor(scene: Phaser.Scene, x: number, y: number) {
     this.scene = scene;
@@ -49,6 +50,7 @@ export class Player {
     this.cursors = scene.input.keyboard.createCursorKeys();
     this.wasd = scene.input.keyboard.addKeys('W,S,A,D');
     this.inventoryKey = scene.input.keyboard.addKey('I');
+    this.bottleKey = scene.input.keyboard.addKey('B');
     
     // Initialize starting inventory from dev config
     Object.entries(DEV_CONFIG.START_INVENTORY).forEach(([itemId, quantity]) => {
@@ -56,11 +58,6 @@ export class Player {
         this.inventory.set(itemId, quantity);
       }
     });
-    
-    // Emit initial inventory update if we have starting items
-    if (this.inventory.size > 0) {
-      scene.game.events.emit('inventory-update', this.inventory);
-    }
   }
 
   update(delta: number) {
@@ -70,6 +67,11 @@ export class Player {
     if (this.invulnerable && this.scene.time.now - this.lastHitTime > 1000) {
       this.invulnerable = false;
       this.sprite.clearTint();
+    }
+    
+    // Check for bottle use
+    if (Phaser.Input.Keyboard.JustDown(this.bottleKey)) {
+      this.useItem('bottle');
     }
     
     // Don't allow movement if dead
@@ -235,6 +237,11 @@ export class Player {
       const itemDef = ItemRegistry.getItem(itemType);
       if (itemDef && itemDef.effect) {
         itemDef.effect(this);
+        
+        // Show visual feedback for bottle use
+        if (itemType === 'bottle') {
+          this.showHealingEffect();
+        }
       }
       
       // Emit event for UI update
@@ -364,5 +371,58 @@ export class Player {
   
   getExperienceToNext(): number {
     return this.experienceToNext;
+  }
+  
+  private showHealingEffect() {
+    // Green healing glow
+    this.sprite.setTint(0x00ff00);
+    
+    // Create healing particles
+    for (let i = 0; i < 6; i++) {
+      const angle = (Math.PI * 2 * i) / 6;
+      const particle = this.scene.add.graphics();
+      particle.fillStyle(0x00ff00, 0.8);
+      particle.fillCircle(0, 0, 3);
+      particle.x = this.sprite.x + Math.cos(angle) * 20;
+      particle.y = this.sprite.y + Math.sin(angle) * 20;
+      
+      this.scene.tweens.add({
+        targets: particle,
+        y: particle.y - 30,
+        alpha: 0,
+        duration: 800,
+        ease: 'Power2',
+        onComplete: () => particle.destroy()
+      });
+    }
+    
+    // Show +20 HP text
+    const healText = this.scene.add.text(
+      this.sprite.x,
+      this.sprite.y - 20,
+      '+20 HP',
+      {
+        fontSize: '20px',
+        color: '#00ff00',
+        fontFamily: 'Arial',
+        stroke: '#000000',
+        strokeThickness: 2
+      }
+    );
+    healText.setOrigin(0.5);
+    
+    this.scene.tweens.add({
+      targets: healText,
+      y: healText.y - 30,
+      alpha: 0,
+      duration: 1000,
+      ease: 'Power2',
+      onComplete: () => healText.destroy()
+    });
+    
+    // Remove tint after effect
+    this.scene.time.delayedCall(300, () => {
+      this.sprite.clearTint();
+    });
   }
 }

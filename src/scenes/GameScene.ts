@@ -89,9 +89,11 @@ export class GameScene extends Phaser.Scene {
     this.game.events.emit('area-update', 0);
     this.game.events.emit('experience-update', 0, 100, 1);
     
-    // Emit initial inventory if player has starting items
-    const playerInventory = this.player.getInventory();
-    this.game.events.emit('inventory-update', playerInventory);
+    // Emit initial inventory after a short delay to ensure UI is ready
+    this.time.delayedCall(100, () => {
+      const playerInventory = this.player.getInventory();
+      this.game.events.emit('inventory-update', playerInventory);
+    });
     
     // Listen for chunk generation events
     this.events.on('chunk-generated', this.onChunkGenerated, this);
@@ -121,9 +123,10 @@ export class GameScene extends Phaser.Scene {
     this.chunkManager.updateChunks(playerChunkX, playerChunkY);
     
     // Update monsters and remove dead ones
+    const playerLevel = this.player.getLevel();
     this.monsters = this.monsters.filter(monster => {
       if (monster.sprite && monster.sprite.active) {
-        monster.update(delta, playerPos.x, playerPos.y);
+        monster.update(delta, playerPos.x, playerPos.y, playerLevel);
         return true;
       }
       return false;
@@ -172,6 +175,7 @@ export class GameScene extends Phaser.Scene {
     // Handle collisions with walls
     this.handleWallCollisions();
     this.handleMonsterWallCollisions();
+    this.handleTeddyWallCollisions();
     
     // Handle monster-player collisions
     this.handleMonsterPlayerCollisions();
@@ -330,6 +334,68 @@ export class GameScene extends Phaser.Scene {
           if (pushDist > 0) {
             monster.sprite.x += (pushX / pushDist) * 2;
             monster.sprite.y += (pushY / pushDist) * 2;
+            body.updateFromGameObject();
+          }
+        }
+      }
+    });
+  }
+  
+  private handleTeddyWallCollisions() {
+    this.teddies.forEach(teddy => {
+      const body = teddy.sprite.body as Phaser.Physics.Arcade.Body;
+      if (!body || !body.enable) return;
+      
+      const teddyX = teddy.sprite.x;
+      const teddyY = teddy.sprite.y;
+      const radius = 12; // Teddy collision radius
+      
+      // Check points around the teddy
+      const checkPoints = [
+        { x: teddyX - radius, y: teddyY - radius },
+        { x: teddyX + radius, y: teddyY - radius },
+        { x: teddyX - radius, y: teddyY + radius },
+        { x: teddyX + radius, y: teddyY + radius },
+        { x: teddyX, y: teddyY - radius },
+        { x: teddyX, y: teddyY + radius },
+        { x: teddyX - radius, y: teddyY },
+        { x: teddyX + radius, y: teddyY },
+      ];
+      
+      // Check if any point is in a wall
+      for (const point of checkPoints) {
+        const tileX = Math.floor(point.x / GAME_CONFIG.tileSize);
+        const tileY = Math.floor(point.y / GAME_CONFIG.tileSize);
+        const tile = this.chunkManager.getTileAt(tileX, tileY);
+        
+        if (tile === TILE_TYPES.WALL || tile === null) {
+          // Stop velocity in the direction of the wall
+          const dx = point.x - teddyX;
+          const dy = point.y - teddyY;
+          
+          if (Math.abs(dx) > Math.abs(dy)) {
+            // Horizontal collision
+            if ((dx > 0 && body.velocity.x > 0) || (dx < 0 && body.velocity.x < 0)) {
+              body.velocity.x = -body.velocity.x * 0.5; // Bounce back
+            }
+          } else {
+            // Vertical collision
+            if ((dy > 0 && body.velocity.y > 0) || (dy < 0 && body.velocity.y < 0)) {
+              body.velocity.y = -body.velocity.y * 0.5; // Bounce back
+            }
+          }
+          
+          // Push teddy away from wall slightly
+          const tileCenterX = tileX * GAME_CONFIG.tileSize + GAME_CONFIG.tileSize / 2;
+          const tileCenterY = tileY * GAME_CONFIG.tileSize + GAME_CONFIG.tileSize / 2;
+          
+          const pushX = teddyX - tileCenterX;
+          const pushY = teddyY - tileCenterY;
+          const pushDist = Math.sqrt(pushX * pushX + pushY * pushY);
+          
+          if (pushDist > 0) {
+            teddy.sprite.x += (pushX / pushDist) * 2;
+            teddy.sprite.y += (pushY / pushDist) * 2;
             body.updateFromGameObject();
           }
         }

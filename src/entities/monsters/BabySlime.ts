@@ -53,8 +53,8 @@ export class BabySlime extends Monster {
     });
   }
   
-  update(delta: number, playerX: number, playerY: number) {
-    super.update(delta, playerX, playerY);
+  update(delta: number, playerX: number, playerY: number, playerLevel?: number) {
+    super.update(delta, playerX, playerY, playerLevel);
     
     // Update animation based on movement direction
     const body = this.sprite.body as Phaser.Physics.Arcade.Body;

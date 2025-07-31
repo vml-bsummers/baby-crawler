@@ -72,7 +72,14 @@ export class BootScene extends Phaser.Scene {
     this.createAnimations();
     
     // Check if we should skip the start screen
-    if (DEV_CONFIG.SKIP_START) {
+    // Check if we should skip the start screen (e.g., after settings restart)
+    const skipStartScreen = this.game.registry.get('skipStartScreen');
+    if (skipStartScreen) {
+      // Clear the flag
+      this.game.registry.set('skipStartScreen', false);
+      // Skip directly to the game
+      this.startGame();
+    } else if (DEV_CONFIG.SKIP_START) {
       // Skip directly to the game
       this.startGame();
     } else {
@@ -163,6 +170,7 @@ export class BootScene extends Phaser.Scene {
       // Start the game scene but keep it hidden initially
       this.scene.start('GameScene');
       this.scene.start('UIScene');
+      this.scene.start('SettingsScene');
       
       // Wait a frame for scenes to initialize, then fade them out
       this.time.delayedCall(50, () => {

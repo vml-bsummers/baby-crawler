@@ -21,7 +21,7 @@ export const DEV_CONFIG = {
   // Spawn rates (probability per frame in update loop)
   SPAWN_RATES: {
     // Monster spawn chance per frame when below max (default: 0.01 = 1%)
-    MONSTER_SPAWN_CHANCE: 0.05, // 5% for testing
+    MONSTER_SPAWN_CHANCE: 0.1, // 5% for testing
     
     // Bottle spawn chance per frame when below max (default: 0.005 = 0.5%)
     BOTTLE_SPAWN_CHANCE: 0.03, // 3% for testing
@@ -32,11 +32,11 @@ export const DEV_CONFIG = {
     // Max counts
     MAX_MONSTERS: 100,
     MAX_BOTTLES: 80, // Increased for testing
-    MAX_TEDDIES: 3, // Limit teddy bears
+    MAX_TEDDIES: 10, // Limit teddy bears
     
     // Per chunk spawn rates
-    MONSTERS_PER_CHUNK: { min: 1, max: 3 },
+    MONSTERS_PER_CHUNK: { min: 1, max: 5 },
     BOTTLES_PER_CHUNK: { min: 1, max: 3 }, // Increased from 0-2 to 1-3 for testing
-    TEDDIES_PER_CHUNK: { min: 0, max: 1 }
+    TEDDIES_PER_CHUNK: { min: 0, max: 3 }
   }
 };

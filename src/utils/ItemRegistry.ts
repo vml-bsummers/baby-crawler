@@ -34,6 +34,8 @@ export class ItemRegistry {
       effect: (player) => {
         // Emit event to spawn teddy
         player.scene.game.events.emit('spawn-teddy', player.getPosition());
+        // Close inventory drawer after using teddy
+        player.scene.game.events.emit('close-inventory');
       }
     });
   }
