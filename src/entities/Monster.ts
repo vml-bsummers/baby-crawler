@@ -147,22 +147,62 @@ export abstract class Monster {
       const body = this.sprite.body as Phaser.Physics.Arcade.Body;
       if (body) {
         body.enable = false;
+        body.setVelocity(0, 0);
       }
+    }
+    
+    // Death effects
+    // Flash red
+    this.sprite.setTint(0xff0000);
+    
+    // Create death particles effect
+    const deathX = this.sprite.x;
+    const deathY = this.sprite.y;
+    
+    // Create small particle explosions
+    for (let i = 0; i < 5; i++) {
+      const particle = this.scene.add.circle(
+        deathX + Phaser.Math.Between(-10, 10),
+        deathY + Phaser.Math.Between(-10, 10),
+        3,
+        this.color
+      );
+      
+      this.scene.tweens.add({
+        targets: particle,
+        x: particle.x + Phaser.Math.Between(-30, 30),
+        y: particle.y + Phaser.Math.Between(-30, 30),
+        alpha: 0,
+        scale: 0,
+        duration: 500,
+        ease: 'Power2',
+        onComplete: () => particle.destroy()
+      });
     }
     
     // Death animation
     this.scene.tweens.add({
       targets: this.sprite,
-      scale: 0,
-      alpha: 0,
-      duration: 300,
+      scale: { from: this.sprite.scale, to: 1.2 },
+      duration: 100,
+      yoyo: true,
       onComplete: () => {
-        if (this.sprite) {
-          this.sprite.destroy();
-        }
-        if (this.levelText) {
-          this.levelText.destroy();
-        }
+        this.scene.tweens.add({
+          targets: this.sprite,
+          scale: 0,
+          alpha: 0,
+          angle: 360,
+          duration: 300,
+          ease: 'Power2',
+          onComplete: () => {
+            if (this.sprite) {
+              this.sprite.destroy();
+            }
+            if (this.levelText) {
+              this.levelText.destroy();
+            }
+          }
+        });
       }
     });
   }
